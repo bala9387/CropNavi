@@ -1,0 +1,22 @@
+{
+  "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 90472,
+    "files": [
+      "static/chunks/472.2c08b965bd9148e2.js"
+    ]
+  },
+  "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 99341,
+    "files": [
+      "static/chunks/341.06f444276664456a.js"
+    ]
+  },
+  "app\\crop-recommendation\\page.tsx -> ./interactive-map": {
+    "id": 88717,
+    "files": [
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.c3b215782428e498.js",
+      "static/chunks/717.68259d4da486b441.js"
+    ]
+  }
+}

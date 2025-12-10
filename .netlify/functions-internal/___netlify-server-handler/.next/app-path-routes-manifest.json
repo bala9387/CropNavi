@@ -1,0 +1,17 @@
+{
+  "/api/market-data/route": "/api/market-data",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/achievements/page": "/achievements",
+  "/community/[postId]/page": "/community/[postId]",
+  "/dashboard/page": "/dashboard",
+  "/community/page": "/community",
+  "/education/page": "/education",
+  "/crop-recommendation/page": "/crop-recommendation",
+  "/profile/page": "/profile",
+  "/login/page": "/login",
+  "/sustainability-score/page": "/sustainability-score",
+  "/disease-detection/page": "/disease-detection",
+  "/page": "/",
+  "/market-analysis/page": "/market-analysis"
+}

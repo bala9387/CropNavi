@@ -1,0 +1,68 @@
+[
+  {
+    "id": "get-started-background",
+    "description": "A close-up view of a healthy crop growing in a field.",
+    "imageUrl": "https://picsum.photos/seed/healthy-crop/1280/720",
+    "imageHint": "healthy crop"
+  },
+  {
+    "id": "dashboard-welcome",
+    "description": "A welcoming view of a lush farm with a clear path forward.",
+    "imageUrl": "https://picsum.photos/seed/farm-path/1280/400",
+    "imageHint": "farm path"
+  },
+  {
+    "id": "crop-recommendation",
+    "description": "A close-up view of a healthy crop growing in a field.",
+    "imageUrl": "https://picsum.photos/seed/healthy-crop/600/400",
+    "imageHint": "healthy crop"
+  },
+  {
+    "id": "disease-detection",
+    "description": "A close-up of a single leaf showing signs of disease, for analysis.",
+    "imageUrl": "https://picsum.photos/seed/wheat-leaf/600/400",
+    "imageHint": "wheat leaf"
+  },
+  {
+    "id": "healthy-leaf",
+    "description": "A close-up of a healthy, green leaf with no signs of disease.",
+    "imageUrl": "https://picsum.photos/seed/healthy-leaf/600/400",
+    "imageHint": "healthy leaf"
+  },
+  {
+    "id": "market-analysis",
+    "description": "A stylized image representing stock market data and trends.",
+    "imageUrl": "https://picsum.photos/seed/stock-price/600/400",
+    "imageHint": "stock chart"
+  },
+  {
+    "id": "sustainability-score",
+    "description": "A farmer's hands holding rich, dark soil with a young sprout.",
+    "imageUrl": "https://picsum.photos/seed/sprouting-seed/600/400",
+    "imageHint": "sprouting seed"
+  },
+  {
+    "id": "community-forum",
+    "description": "A vibrant community of farmers working together in a field.",
+    "imageUrl": "https://picsum.photos/seed/community-field/600/400",
+    "imageHint": "community field"
+  },
+  {
+    "id": "educational-modules",
+    "description": "Rows of vegetable crops in a well-tended garden.",
+    "imageUrl": "https://picsum.photos/seed/vegetable-rows/600/400",
+    "imageHint": "vegetable garden"
+  },
+  {
+    "id": "achievements",
+    "description": "A golden field of ripe wheat, symbolizing a successful harvest achievement.",
+    "imageUrl": "https://picsum.photos/seed/golden-wheat/600/400",
+    "imageHint": "golden wheat"
+  },
+  {
+    "id": "dashboard",
+    "description": "A grid of cards showing various farm-related features.",
+    "imageUrl": "https://picsum.photos/seed/dashboard-grid/600/400",
+    "imageHint": "dashboard grid"
+  }
+]

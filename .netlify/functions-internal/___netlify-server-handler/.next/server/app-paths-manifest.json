@@ -1,0 +1,17 @@
+{
+  "/api/market-data/route": "app/api/market-data/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/achievements/page": "app/achievements/page.js",
+  "/community/[postId]/page": "app/community/[postId]/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/community/page": "app/community/page.js",
+  "/education/page": "app/education/page.js",
+  "/crop-recommendation/page": "app/crop-recommendation/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/login/page": "app/login/page.js",
+  "/sustainability-score/page": "app/sustainability-score/page.js",
+  "/disease-detection/page": "app/disease-detection/page.js",
+  "/page": "app/page.js",
+  "/market-analysis/page": "app/market-analysis/page.js"
+}
