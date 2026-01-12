@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { TranslationProvider } from '@/hooks/use-translation';
@@ -26,7 +27,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased" suppressHydrationWarning>
         <Suspense fallback={<div>Loading...</div>}>
           <TranslationProvider>
             <AppLayout>{children}</AppLayout>

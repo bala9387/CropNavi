@@ -13,15 +13,15 @@
   },
   {
     "id": "crop-recommendation",
-    "description": "A close-up view of a healthy crop growing in a field.",
-    "imageUrl": "https://picsum.photos/seed/healthy-crop/600/400",
-    "imageHint": "healthy crop"
+    "description": "A vibrant, healthy crop field in Tamil Nadu.",
+    "imageUrl": "/images/crop-recommendation.png",
+    "imageHint": "healthy crop field"
   },
   {
     "id": "disease-detection",
-    "description": "A close-up of a single leaf showing signs of disease, for analysis.",
-    "imageUrl": "https://picsum.photos/seed/wheat-leaf/600/400",
-    "imageHint": "wheat leaf"
+    "description": "AI analysis of a plant leaf for disease.",
+    "imageUrl": "/images/disease-detection.png",
+    "imageHint": "leaf scanning"
   },
   {
     "id": "healthy-leaf",
@@ -31,21 +31,21 @@
   },
   {
     "id": "market-analysis",
-    "description": "A stylized image representing stock market data and trends.",
-    "imageUrl": "https://picsum.photos/seed/stock-price/600/400",
-    "imageHint": "stock chart"
+    "description": "Visualisation of agricultural market trends.",
+    "imageUrl": "/images/market-analysis.png",
+    "imageHint": "market trends chart"
   },
   {
     "id": "sustainability-score",
-    "description": "A farmer's hands holding rich, dark soil with a young sprout.",
-    "imageUrl": "https://picsum.photos/seed/sprouting-seed/600/400",
-    "imageHint": "sprouting seed"
+    "description": "Sustainable farming with solar panels.",
+    "imageUrl": "/images/sustainability-score.png",
+    "imageHint": "sustainable farm"
   },
   {
     "id": "community-forum",
-    "description": "A vibrant community of farmers working together in a field.",
-    "imageUrl": "https://picsum.photos/seed/community-field/600/400",
-    "imageHint": "community field"
+    "description": "Farmers sharing knowledge in a community setting.",
+    "imageUrl": "/images/community-forum.png",
+    "imageHint": "community of farmers"
   },
   {
     "id": "educational-modules",
@@ -55,9 +55,9 @@
   },
   {
     "id": "achievements",
-    "description": "A golden field of ripe wheat, symbolizing a successful harvest achievement.",
-    "imageUrl": "https://picsum.photos/seed/golden-wheat/600/400",
-    "imageHint": "golden wheat"
+    "description": "Golden trophy cup with fresh produce.",
+    "imageUrl": "/images/achievements.png",
+    "imageHint": "agriculture trophy"
   },
   {
     "id": "dashboard",

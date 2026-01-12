@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef, ReactNode } from 'react';
@@ -27,9 +26,9 @@ const secondaryMarkerIcon = new L.Icon({
 });
 
 interface DummyLocation {
-    lat: number;
-    lng: number;
-    name: string;
+  lat: number;
+  lng: number;
+  name: string;
 }
 
 interface InteractiveMapProps {
@@ -37,14 +36,16 @@ interface InteractiveMapProps {
   longitude: number;
   onMapClick: (lat: number, lon: number) => void;
   dummyLocations?: DummyLocation[];
+  overlayProperty?: string | null;
   children?: ReactNode;
 }
 
-function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocations = [], children }: InteractiveMapProps) {
+function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocations = [], overlayProperty = null, children }: InteractiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const mainMarkerRef = useRef<L.Marker | null>(null);
   const dummyMarkersRef = useRef<L.Marker[]>([]);
+  const overlayLayerRef = useRef<L.TileLayer.WMS | null>(null);
 
   useEffect(() => {
     if (mapContainerRef.current && !mapRef.current) {
@@ -68,6 +69,22 @@ function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocatio
       map.on('click', (e) => {
         onMapClick(e.latlng.lat, e.latlng.lng);
       });
+
+      // Force initial invalidate
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    }
+
+    // ResizeObserver to handle container size changes (tabs, resize, animations)
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    });
+
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
     }
 
     // Cleanup on unmount
@@ -76,6 +93,7 @@ function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocatio
         mapRef.current.remove();
         mapRef.current = null;
       }
+      resizeObserver.disconnect();
     };
   }, []); // Only run once on mount
 
@@ -88,6 +106,36 @@ function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocatio
       }
     }
   }, [latitude, longitude]);
+
+  // Handle Overlay Layer
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing overlay
+    if (overlayLayerRef.current) {
+      mapRef.current.removeLayer(overlayLayerRef.current);
+      overlayLayerRef.current = null;
+    }
+
+    if (overlayProperty) {
+      const wmsUrl = `https://maps.isric.org/mapserv?map=/map/${overlayProperty}.map`;
+      const layerName = `${overlayProperty}_0-5cm_mean`;
+
+      const wmsLayer = L.tileLayer.wms(wmsUrl, {
+        layers: layerName,
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.1',
+        attribution: 'SoilGrids © ISRIC',
+        opacity: 0.7,
+        styles: 'default',
+        crossOrigin: true // Important for validation and avoiding tainted canvas if used elsewhere
+      });
+
+      wmsLayer.addTo(mapRef.current);
+      overlayLayerRef.current = wmsLayer;
+    }
+  }, [overlayProperty]);
 
   // Update dummy locations
   useEffect(() => {
@@ -106,16 +154,16 @@ function InteractiveMapComponent({ latitude, longitude, onMapClick, dummyLocatio
     }
   }, [dummyLocations]);
 
-  return <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }} />;
+  return <div ref={mapContainerRef} className="h-full w-full isolate min-h-[400px]" style={{ minHeight: '400px', minWidth: '100%', height: '100%', width: '100%' }} />;
 }
 
 
 // Default export a simple wrapper that checks for client side execution
 export const InteractiveMap = (props: InteractiveMapProps) => {
-    const [isClient, setIsClient] = useState(false);
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-    return isClient ? <InteractiveMapComponent {...props} /> : null;
+  return isClient ? <InteractiveMapComponent {...props} /> : null;
 }

@@ -25,27 +25,53 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const initialLang = searchParams.get('lang') || 'en';
-    
-    const [selectedLang, setSelectedLang] = useState(initialLang);
+
+    // Initialize with 'en' to ensure consistent server/client render (hydration)
+    const [selectedLang, setSelectedLang] = useState('en');
     const [isTranslating, setIsTranslating] = useState(false);
-    
+
     const handleLanguageChange = (lang: string) => {
         setIsTranslating(true);
         setSelectedLang(lang);
+        // Persist to local storage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Optional: Update URL for shareability, but don't rely on it for state
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.set('lang', lang);
         const search = current.toString();
         const query = search ? `?${search}` : "";
         router.push(`${pathname}${query}`);
-        //setIsTranslating(false); // This will be set by individual hooks
     };
-    
+
+    // Initial Load & URL Sync
     useEffect(() => {
-        const langFromParams = searchParams.get('lang') || 'en';
-        if (langFromParams !== selectedLang) {
-            setSelectedLang(langFromParams);
+        const langFromParams = searchParams.get('lang');
+
+        if (langFromParams) {
+            // If URL has language, it takes precedence and we save it
+            if (langFromParams !== selectedLang) {
+                setSelectedLang(langFromParams);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('preferredLanguage', langFromParams);
+                }
+            }
+        } else {
+            // If No URL param, check local storage
+            if (typeof window !== 'undefined') {
+                const storedLang = localStorage.getItem('preferredLanguage');
+                if (storedLang && storedLang !== selectedLang) {
+                    setSelectedLang(storedLang);
+                }
+            }
         }
-    }, [searchParams, selectedLang]);
+
+        // Always reset translating state when params/state settle
+        setIsTranslating(false);
+    }, [searchParams]); // Depend only on searchParams (and mount)
+
 
     const value = {
         selectedLang,
@@ -86,7 +112,7 @@ export function useTranslation<T extends Record<string, string>>(originalText: T
     useEffect(() => {
         const translate = async () => {
             const language = languages.find(l => l.code === selectedLang);
-            
+
             // Immediately reset to original if English is selected or no language found
             if (!language || selectedLang === 'en') {
                 setTranslatedText(stableOriginalText);
@@ -106,7 +132,7 @@ export function useTranslation<T extends Record<string, string>>(originalText: T
                 });
 
                 const newTranslatedText = originalKeys.reduce((acc, key, index) => {
-                    acc[key] = response.translations[index] || originalValues[index];
+                    acc[key] = (response.translations[index] || originalValues[index]) as any;
                     return acc;
                 }, {} as T);
 
@@ -129,7 +155,7 @@ export function useTranslation<T extends Record<string, string>>(originalText: T
     }, [selectedLang, stableOriginalText, toast]);
 
     const T = forwardRef<HTMLSpanElement, { textKey: keyof T } & React.HTMLAttributes<HTMLSpanElement>>((
-      { textKey, ...props }, ref
+        { textKey, ...props }, ref
     ) => {
         const text = translatedText[textKey] || stableOriginalText[textKey];
         if (isComponentTranslating) {
