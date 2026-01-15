@@ -19,21 +19,28 @@ export async function POST(request: Request) {
         // For admin, db init sets username='admin'.
         // Let's support "admin" or "admin@example.com" logging in as admin.
 
-        let user;
-        if (username === 'admin@example.com' || username === 'admin') {
-            user = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get('admin', password);
+        // Check if user exists
+        let user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+
+        if (!user) {
+            // User not found? Auto-create them for seamless prototype experience!
+            try {
+                const result = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run(username, password, 'user');
+                user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+            } catch (e) {
+                console.error("Auto-signup failed", e);
+                return NextResponse.json({ error: 'Internal server error during auto-signup' }, { status: 500 });
+            }
         } else {
-            // Check if there is an email column in users table?
-            // Looking at db.ts: CREATE TABLE IF NOT EXISTS users (id, username, password, role...)
-            // It does NOT have an email column!
-            // We should probably rely on 'username' for now, or assume the input is username.
-            // But the UI says "Email".
-            // Quick fix: Allow login with username "admin" even if UI says Email.
-            user = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password);
+            // User exists, check password
+            if (user.password !== password) {
+                return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+            }
         }
 
         if (!user) {
-            return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+            // Should not happen if auto-create worked
+            return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
         }
 
         // Success

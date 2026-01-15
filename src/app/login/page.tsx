@@ -89,6 +89,11 @@ function AuthenticationPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // Save user to LocalStorage for persistence across session
+        if (data.user) {
+          localStorage.setItem('cropnavi_user', JSON.stringify(data.user));
+        }
+
         toast({
           title: isLogin ? "Login Successful" : "Account Created",
           description: isLogin ? "Welcome back to CropNavi!" : "Your account has been set up.",
@@ -125,7 +130,15 @@ function AuthenticationPage() {
         // Enforce account selection prompt as requested
         googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-        await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        // Save Firebase User
+        localStorage.setItem('cropnavi_user', JSON.stringify({
+          username: user.displayName || user.email?.split('@')[0] || 'Google User',
+          email: user.email
+        }));
+
         toast({ title: "Google Login Successful", description: "Redirecting..." });
         router.push('/dashboard');
       } else {
@@ -136,6 +149,8 @@ function AuthenticationPage() {
 
       // Implicit Demo Mode
       await new Promise(resolve => setTimeout(resolve, 1500));
+
+      localStorage.setItem('cropnavi_user', JSON.stringify({ username: "Demo User", email: "demo@cropnavi.com" }));
 
       toast({
         title: "Login Successful",
@@ -239,7 +254,7 @@ function AuthenticationPage() {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password"><T textKey="passwordLabel" /></Label>
                     {isLogin &&
-                      <Link href="#" className="leading-none text-xs text-green-600 hover:text-green-500 font-medium">
+                      <Link href="/forgot-password" className="leading-none text-xs text-green-600 hover:text-green-500 font-medium">
                         <T textKey="forgotPassword" />
                       </Link>
                     }

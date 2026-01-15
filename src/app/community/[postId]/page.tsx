@@ -23,37 +23,37 @@ const originalText = {
 // Mock data - In a real app, you would fetch this based on the postId
 const postData = {
   id: "1",
-  title: "Best crop rotation practices for Jharkhand soil?",
-  author: "Rina Devi",
-  avatarUrl: "https://picsum.photos/seed/rina/100/100",
+  title: "Best drip irrigation setup for Coimbatore black soil?",
+  author: "Ramesh Kumar",
+  avatarUrl: "https://picsum.photos/seed/ramesh/100/100",
   timestamp: "2 days ago",
-  tags: ["Crop Rotation", "Jharkhand", "Soil Health"],
-  likes: 28,
-  content: "I'm planning my next season and want to improve my soil's nitrogen levels naturally. What are some effective crop rotation strategies you all have used successfully in this region? \n\nI have been doing rice-wheat cycle for a few years, but I feel the yield is slowly decreasing. I have access to good irrigation. I'm thinking of planting some kind of pulse (dal) but not sure which one would be best for the soil here. Any advice would be greatly appreciated!",
+  tags: ["Irrigation", "Coimbatore", "Black Soil"],
+  likes: 32,
+  content: "I'm looking to install a new drip system for my cotton field near Pollachi. Given the heavy black soil here, what spacing and emitter flow rates do you recommend to avoid waterlogging? \n\nI have previously used flood irrigation but water scarcity is becoming an issue. My soil has high clay content. Any specific brands or configurations that work well in our region? Also, purely regarding maintenance, how often do you flush the laterals?",
   replies: [
     {
       id: "r1",
-      author: "Sanjay Kumar",
-      avatarUrl: "https://picsum.photos/seed/sanjay/100/100",
+      author: "Senthil Nathan",
+      avatarUrl: "https://picsum.photos/seed/senthil/100/100",
       timestamp: "2 days ago",
-      content: "Great question, Rina! I switched to a rice-lentil (masoor) rotation and it has worked wonders for my soil. Lentils are great nitrogen fixers. Make sure to use a good quality rhizobium culture when sowing.",
-      likes: 5,
+      content: "Great decision, Ramesh! For black soil in Pollachi, I recommend 16mm laterals with 40cm spacing. Since clay holds water, use lower flow emitters (2 LPH) to give it time to seep in without pooling. This prevents root rot.",
+      likes: 15,
     },
     {
       id: "r2",
-      author: "Priya Singh",
-      avatarUrl: "https://picsum.photos/seed/priya/100/100",
+      author: "Lakshmi Priya",
+      avatarUrl: "https://picsum.photos/seed/lakshmi/100/100",
       timestamp: "1 day ago",
-      content: "I agree with Sanjay. Another option is Chickpea (chana). It's also a great nitrogen fixer and has a good market price right now. You could also try green manure crops like Dhaincha in the summer fallow period.",
-      likes: 8,
+      content: "I agree with Senthil. Also, check with the local Horticulture department in Coimbatore. There is a 75% subsidy scheme active right now for small farmers installing micro-irrigation. Don't miss that!",
+      likes: 28,
     },
     {
       id: "r3",
       author: "Admin",
       avatarUrl: "https://picsum.photos/seed/admin/100/100",
       timestamp: "1 day ago",
-      content: "Excellent discussion. For those interested, the state agricultural university has published a guide on crop rotation for Jharkhand. You can find it in our Education section. [Link to guide]",
-      likes: 12,
+      content: "Excellent discussion. TNAU (Tamil Nadu Agricultural University) has a specific guide for 'Drip fertigation in Cotton for Black Soils'. You can visit the university extension center or check our Education module. [Link to TNAU Guide]",
+      likes: 42,
     },
   ],
 };
@@ -78,18 +78,18 @@ export default function PostPage({ params }: { params: { postId: string } }) {
 
       <Card>
         <CardHeader>
-            <div className="flex items-center gap-4">
-              <Avatar className="size-12">
-                <AvatarImage src={postData.avatarUrl} alt={postData.author} data-ai-hint="user avatar" />
-                <AvatarFallback>{postData.author.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle className="font-headline text-2xl">{postData.title}</CardTitle>
-                <CardDescription>
-                  <T textKey="postedBy" /> <span className="font-semibold text-primary">{postData.author}</span> &bull; {postData.timestamp}
-                </CardDescription>
-              </div>
+          <div className="flex items-center gap-4">
+            <Avatar className="size-12">
+              <AvatarImage src={postData.avatarUrl} alt={postData.author} data-ai-hint="user avatar" />
+              <AvatarFallback>{postData.author.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <CardTitle className="font-headline text-2xl">{postData.title}</CardTitle>
+              <CardDescription>
+                <T textKey="postedBy" /> <span className="font-semibold text-primary">{postData.author}</span> &bull; {postData.timestamp}
+              </CardDescription>
             </div>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="whitespace-pre-wrap text-card-foreground/90">{postData.content}</p>
@@ -98,17 +98,17 @@ export default function PostPage({ params }: { params: { postId: string } }) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between border-t pt-4">
-            <div className="flex gap-4">
-                <Button variant="ghost" size="sm">
-                    <ThumbsUp className="mr-2"/> {postData.likes} <T textKey="like" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                    <MessageSquare className="mr-2"/> <T textKey="replies" />
-                </Button>
-            </div>
+          <div className="flex gap-4">
             <Button variant="ghost" size="sm">
-                <Share2 className="mr-2" /> <T textKey="share" />
+              <ThumbsUp className="mr-2" /> {postData.likes} <T textKey="like" />
             </Button>
+            <Button variant="ghost" size="sm">
+              <MessageSquare className="mr-2" /> <T textKey="replies" />
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm">
+            <Share2 className="mr-2" /> <T textKey="share" />
+          </Button>
         </CardFooter>
       </Card>
 
@@ -124,17 +124,17 @@ export default function PostPage({ params }: { params: { postId: string } }) {
               </Avatar>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                    <p className="font-semibold">{reply.author}</p>
-                    <p className="text-xs text-muted-foreground">{reply.timestamp}</p>
+                  <p className="font-semibold">{reply.author}</p>
+                  <p className="text-xs text-muted-foreground">{reply.timestamp}</p>
                 </div>
                 <p className="text-sm mt-1">{reply.content}</p>
-                 <div className="flex items-center gap-4 mt-2">
-                    <Button variant="ghost" size="sm" className="text-xs h-7">
-                        <ThumbsUp className="mr-1.5 size-3.5"/> {reply.likes}
-                    </Button>
-                     <Button variant="ghost" size="sm" className="text-xs h-7">
-                        <T textKey="replies" />
-                    </Button>
+                <div className="flex items-center gap-4 mt-2">
+                  <Button variant="ghost" size="sm" className="text-xs h-7">
+                    <ThumbsUp className="mr-1.5 size-3.5" /> {reply.likes}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-xs h-7">
+                    <T textKey="replies" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -142,19 +142,18 @@ export default function PostPage({ params }: { params: { postId: string } }) {
         ))}
       </div>
 
-       <Card>
+      <Card>
         <CardHeader>
-            <CardTitle className="font-headline text-lg"><T textKey="postReply" /></CardTitle>
+          <CardTitle className="font-headline text-lg"><T textKey="postReply" /></CardTitle>
         </CardHeader>
         <CardContent>
-            <Textarea placeholder={translatedText.writeReply} className="min-h-[120px]"/>
+          <Textarea placeholder={translatedText.writeReply} className="min-h-[120px]" />
         </CardContent>
         <CardFooter>
-            <Button><T textKey="submitReply" /></Button>
+          <Button><T textKey="submitReply" /></Button>
         </CardFooter>
-       </Card>
+      </Card>
     </div>
   );
 }
 
-    

@@ -7,7 +7,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, X, Bot, User, Loader2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { aiChat } from '@/ai/flows/ai-chat';
 import type { MessageSchema } from '@/ai/flows/ai-chat.schemas';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -37,12 +36,13 @@ export function ChatWidget() {
     }, []);
 
     useEffect(() => {
-        if(isOpen && messages.length === 0) {
+        // Reset messages when chat opens or language changes
+        if (isOpen) {
             setMessages([
                 { role: 'model', content: translatedText.initialMessage }
             ]);
         }
-    }, [isOpen, messages.length, translatedText.initialMessage]);
+    }, [isOpen, selectedLang, translatedText.initialMessage]);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
@@ -65,8 +65,20 @@ export function ChatWidget() {
 
         try {
             const history = messages;
-            const result = await aiChat({ history, prompt: input, language: selectedLang });
-            
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ history, prompt: input, language: selectedLang }),
+            });
+
+            if (!response.ok) {
+                throw new Error('API error');
+            }
+
+            const result = await response.json();
+
             const modelMessage: z.infer<typeof MessageSchema> = { role: 'model', content: result.response };
             setMessages(prev => [...prev, modelMessage]);
 
@@ -78,7 +90,7 @@ export function ChatWidget() {
                 description: 'Sorry, I had trouble getting a response. Please try again.',
             });
             // Revert to previous state on error
-             setMessages(messages);
+            setMessages(messages);
         } finally {
             setIsLoading(false);
         }
@@ -96,25 +108,25 @@ export function ChatWidget() {
                     <T textKey="chatWithAI" />
                 </Button>
             </div>
-            
+
             <Card className={cn(
                 "fixed bottom-6 right-6 z-50 w-full max-w-sm flex flex-col h-[70vh] max-h-[600px] transition-transform duration-300 origin-bottom-right",
-                 !isOpen && "scale-0"
+                !isOpen && "scale-0"
             )}>
                 <CardHeader className="flex flex-row items-center justify-between border-b">
                     <div className="flex items-center gap-3">
-                         <Avatar>
-                            <AvatarFallback className="bg-primary text-primary-foreground"><Bot/></AvatarFallback>
+                        <Avatar>
+                            <AvatarFallback className="bg-primary text-primary-foreground"><Bot /></AvatarFallback>
                         </Avatar>
                         <div>
-                             <CardTitle className="font-headline text-lg"><T textKey="assistantName" /></CardTitle>
-                             <CardDescription className="flex items-center gap-1.5 text-xs">
+                            <CardTitle className="font-headline text-lg"><T textKey="assistantName" /></CardTitle>
+                            <CardDescription className="flex items-center gap-1.5 text-xs">
                                 <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                 </span>
                                 <T textKey="online" />
-                             </CardDescription>
+                            </CardDescription>
                         </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
@@ -123,32 +135,27 @@ export function ChatWidget() {
                 </CardHeader>
                 <CardContent className="flex-1 p-0 overflow-hidden">
                     <ScrollArea className="h-full" viewportRef={scrollAreaRef}>
-                       <div className="p-4 space-y-4">
+                        <div className="p-4 space-y-4">
                             {messages.map((message, index) => (
-                                <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : 'justify-start')}>
-                                    {message.role === 'model' && (
-                                        <Avatar className="size-8">
-                                            <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5"/></AvatarFallback>
-                                        </Avatar>
-                                    )}
-                                     <div className={cn("rounded-lg px-3 py-2 max-w-[80%] whitespace-pre-wrap", 
-                                        message.role === 'user' 
-                                            ? 'bg-primary text-primary-foreground' 
+                                <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}>
+                                    <Avatar className="size-8 shrink-0">
+                                        <AvatarFallback className="bg-primary text-primary-foreground">
+                                            {message.role === 'user' ? <User className="size-5" /> : <Bot className="size-5" />}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className={cn("rounded-lg px-3 py-2 max-w-[80%] whitespace-pre-wrap",
+                                        message.role === 'user'
+                                            ? 'bg-primary text-primary-foreground'
                                             : 'bg-muted text-muted-foreground'
-                                        )}>
-                                         <p className="text-sm">{message.content}</p>
+                                    )}>
+                                        <p className="text-sm">{message.content}</p>
                                     </div>
-                                    {message.role === 'user' && (
-                                         <Avatar className="size-8">
-                                            <AvatarFallback><User className="size-5"/></AvatarFallback>
-                                        </Avatar>
-                                    )}
                                 </div>
                             ))}
-                             {isLoading && (
+                            {isLoading && (
                                 <div className="flex items-start gap-3 justify-start">
                                     <Avatar className="size-8">
-                                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5"/></AvatarFallback>
+                                        <AvatarFallback className="bg-primary text-primary-foreground"><Bot className="size-5" /></AvatarFallback>
                                     </Avatar>
                                     <div className="rounded-lg px-3 py-2 bg-muted text-muted-foreground">
                                         <Loader2 className="size-5 animate-spin" />
@@ -160,7 +167,7 @@ export function ChatWidget() {
                 </CardContent>
                 <CardFooter className="border-t p-4">
                     <form onSubmit={handleSendMessage} className="flex w-full items-center space-x-2">
-                        <Input 
+                        <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={translatedText.placeholder}

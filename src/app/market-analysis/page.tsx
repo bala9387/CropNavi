@@ -237,7 +237,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
       <div className="bg-background/95 border border-primary/20 p-3 rounded-lg shadow-xl backdrop-blur-md">
         <p className="font-bold text-primary mb-1">{label}</p>
         <p className="text-sm font-medium">
-          Price: <span className="text-foreground">Rs. {payload[0].value}</span>
+          Price: <span className="text-foreground">Rs. {payload[0]?.value || 0}</span>
         </p>
       </div>
     );
@@ -250,9 +250,9 @@ export default function MarketAnalysisPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const [selectedCommodity, setSelectedCommodity] = useState<string>("Paddy");
-  const [selectedState, setSelectedState] = useState<string>("Tamil Nadu");
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("Coimbatore");
+  const [selectedCommodity, setSelectedCommodity] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedMarket, setSelectedMarket] = useState<string>("");
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
@@ -388,6 +388,9 @@ export default function MarketAnalysisPage() {
           ...(selectedMarket && { market: selectedMarket }),
         });
 
+        // AgMarkNet Prices are typically per Quintal (100kg)
+        const priceModifier = priceUnit === 'ton' ? 10 : 0.01;
+
         const response = await fetch(`/api/agmarket?${params}`);
         const result = await response.json();
 
@@ -395,13 +398,22 @@ export default function MarketAnalysisPage() {
 
         if (result.success && result.data && result.data.length > 0) {
           // Transform API data to chart format
-          const newData = result.data.map((point: any) => {
-            const date = new Date(point.date);
+          const newData = result.data.map((point: any, index: number) => {
+            const dateStr = point.date || point.arrival_date;
+            let date = dateStr ? new Date(dateStr) : null;
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            // Validate date and create fallback with actual dates
+            if (!date || isNaN(date.getTime())) {
+              date = new Date();
+              date.setDate(date.getDate() - (result.data.length - index - 1));
+            }
+            const displayName = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+
             return {
-              name: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-              price: point.modal_price,
-              date: point.date,
+              name: displayName,
+              price: Math.round((point.modal_price || point.price || 0) * priceModifier), // Apply Unit Conversion
+              date: date.toISOString(),
             };
           });
 
@@ -426,17 +438,20 @@ export default function MarketAnalysisPage() {
           });
 
           // Update form data with real market summary
-          const avgPrice = Math.round(newData.reduce((a: number, b: any) => a + b.price, 0) / newData.length);
+          const avgPrice = newData.length > 0 ? Math.round(newData.reduce((a: number, b: any) => a + (b.price || 0), 0) / newData.length) : 0;
           const summary = `${selectedCommodity} in ${selectedState}${selectedDistrict ? ` (${selectedDistrict})` : ''}. 
-Latest data from AgMarkNet: Avg Price: Rs. ${avgPrice}/${priceUnit}. 
-Highest: Rs. ${maxPrice}/${priceUnit} on ${best?.name}. 
+Latest data from AgMarkNet (${priceUnit === 'ton' ? 'Per Ton' : 'Per Kg'}): Avg Price: Rs. ${avgPrice}. 
+Highest: Rs. ${maxPrice || 0} on ${best?.name || 'N/A'}. 
 Data Source: ${result.source === 'cache' ? 'Cached' : 'Live'} AgMarkNet prices.`;
           form.setValue('marketData', summary);
 
         } else {
           // Fallback to simulated data if API fails
           console.warn('AgMarkNet API returned no data, using fallback');
-          const fallbackData = generateFallbackData(selectedCommodity);
+          let fallbackData = generateFallbackData(selectedCommodity);
+          // Apply unit conversion to fallback data (Base is Quintal)
+          fallbackData = fallbackData.map(d => ({ ...d, price: Math.round(d.price * priceModifier) }));
+
           setChartData(fallbackData);
           form.setValue('marketData', `Fallback data for ${selectedCommodity} - API temporarily unavailable`);
         }
@@ -552,39 +567,54 @@ Data Source: ${result.source === 'cache' ? 'Cached' : 'Live'} AgMarkNet prices.`
               {selectedDistrict || selectedState ? (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground/70">Select Market with Photo</label>
-                  <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto p-2 bg-background/30 rounded-lg border border-primary/10">
+                  <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto p-2 bg-background/30 rounded-lg border border-primary/10 scrollbar-thin">
                     {getMarketsForDistrict(selectedDistrict || selectedState).map((market) => (
                       <button
                         key={market.name}
                         type="button"
                         onClick={() => setSelectedMarket(market.name)}
                         className={cn(
-                          "relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all hover:shadow-lg group",
+                          "relative flex items-center gap-4 p-3 rounded-xl border-2 transition-all hover:shadow-lg group",
                           selectedMarket === market.name
-                            ? "border-primary bg-primary/10 shadow-md"
-                            : "border-primary/10 hover:border-primary/30 bg-background/50"
+                            ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20"
+                            : "border-primary/10 hover:border-primary/30 bg-background/50 hover:bg-background/80"
                         )}
                       >
-                        <div className="relative w-24 h-16 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
+                        <div className="relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md bg-gradient-to-br from-green-100 to-primary/20">
                           <img
                             src={market.image}
                             alt={market.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=250&fit=crop';
+                            }}
                           />
                           {selectedMarket === market.name && (
-                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                              <div className="bg-primary text-white rounded-full p-1">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="absolute inset-0 bg-primary/30 backdrop-blur-[1px] flex items-center justify-center">
+                              <div className="bg-primary text-white rounded-full p-1.5 shadow-lg">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               </div>
                             </div>
                           )}
                         </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-semibold text-sm text-foreground">{market.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{market.type}</div>
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="font-semibold text-sm text-foreground truncate">{market.name}</div>
+                          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            {market.type}
+                          </div>
                         </div>
+                        {selectedMarket === market.name && (
+                          <div className="absolute top-2 right-2">
+                            <div className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-semibold shadow">
+                              Selected
+                            </div>
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -779,7 +809,7 @@ Data Source: ${result.source === 'cache' ? 'Cached' : 'Live'} AgMarkNet prices.`
                   <div className="space-y-1">
                     <AlertTitle className="text-lg font-headline text-primary">Best Price Advice</AlertTitle>
                     <AlertDescription className="text-muted-foreground text-base">
-                      The highest recorded price for <strong>{bestPriceData.commodity}</strong> in this period was <span className="font-bold text-primary">Rs. {bestPriceData.price}/{priceUnit}</span> on <strong>{bestPriceData.name} ({bestPriceData.date ? new Date(bestPriceData.date).toLocaleDateString() : 'N/A'})</strong> at <strong>{bestPriceData.market}</strong>.
+                      The highest recorded price for <strong>{bestPriceData.commodity || 'N/A'}</strong> in this period was <span className="font-bold text-primary">Rs. {bestPriceData.price || 0}/{priceUnit}</span> on <strong>{bestPriceData.name || 'N/A'} ({bestPriceData.date ? new Date(bestPriceData.date).toLocaleDateString() : 'N/A'})</strong> at <strong>{bestPriceData.market || 'N/A'}</strong>.
                       <br />
                       <span className="text-sm opacity-80 mt-1 block">Consider timing your sales around this peak or checking this market specifically for better returns.</span>
                     </AlertDescription>

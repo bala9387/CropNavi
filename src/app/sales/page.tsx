@@ -21,7 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, Eye, Calendar } from 'lucide-react';
+import { Loader2, Search, Eye, Calendar, Download, TrendingUp, ShoppingCart, DollarSign, Package } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 
 interface SaleItem {
@@ -89,6 +89,8 @@ export default function SalesPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [productsMap, setProductsMap] = useState<Record<number, string>>({});
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
 
   const { toast } = useToast();
   const { translatedText, T } = useTranslation(originalText);
@@ -97,6 +99,40 @@ export default function SalesPage() {
     fetchSales();
     fetchProductNames(); // Pre-fetch product names to map IDs
   }, []);
+
+  // Calculate analytics
+  const totalSales = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+  const averageSale = sales.length > 0 ? totalSales / sales.length : 0;
+  const totalItems = sales.reduce((sum, sale) => sum + (sale.items?.length || 0), 0);
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    const headers = ['Sale ID', 'Date', 'Total Amount', 'Notes'];
+    const rows = filteredSales.map(sale => [
+      sale.id,
+      formatDate(sale.sale_date || sale.created_at),
+      (sale.total_amount || 0).toFixed(2),
+      sale.notes || 'None'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales-history-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: "Sales data has been exported to CSV",
+    });
+  };
 
   const fetchSales = async () => {
     try {
@@ -140,10 +176,16 @@ export default function SalesPage() {
     }
   };
 
-  const filteredSales = sales.filter(s =>
-    s.id.toString().includes(search) ||
-    (s.notes && s.notes.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredSales = sales.filter(s => {
+    const matchesSearch = s.id.toString().includes(search) ||
+      (s.notes && s.notes.toLowerCase().includes(search.toLowerCase()));
+
+    const saleDate = new Date(s.sale_date || s.created_at);
+    const matchesDateFrom = !dateFrom || saleDate >= new Date(dateFrom);
+    const matchesDateTo = !dateTo || saleDate <= new Date(dateTo);
+
+    return matchesSearch && matchesDateFrom && matchesDateTo;
+  });
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-';
@@ -157,18 +199,92 @@ export default function SalesPage() {
         <p className="text-muted-foreground"><T textKey="View and manage your past transactions." /></p>
       </div>
 
+      {/* Analytics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rs. {(totalSales || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">{sales.length} transactions</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Sale</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rs. {(averageSale || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">per transaction</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sales.length}</div>
+            <p className="text-xs text-muted-foreground">completed sales</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalItems}</div>
+            <p className="text-xs text-muted-foreground">total products</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle><T textKey="Sales" /></CardTitle>
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={translatedText['Search sales...']}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <CardTitle><T textKey="Sales" /></CardTitle>
+              <Button onClick={exportToCSV} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={translatedText['Search sales...']}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  placeholder="From date"
+                  className="w-40"
+                />
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  placeholder="To date"
+                  className="w-40"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -208,7 +324,7 @@ export default function SalesPage() {
                         {sale.notes || <span className="text-muted-foreground italic"><T textKey="None" /></span>}
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        Rs. {sale.total_amount.toFixed(2)}
+                        Rs. {(sale.total_amount || 0).toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Sheet>
@@ -236,7 +352,7 @@ export default function SalesPage() {
                                           <p className="font-medium">{productsMap[item.product_id] || `Product #${item.product_id}`}</p>
                                           <p className="text-muted-foreground">Rs. {item.unit_price} x {item.quantity}</p>
                                         </div>
-                                        <p className="font-semibold">Rs. {item.total_price.toFixed(2)}</p>
+                                        <p className="font-semibold">Rs. {(item.total_price || 0).toFixed(2)}</p>
                                       </div>
                                     ))}
                                   </div>
@@ -251,7 +367,7 @@ export default function SalesPage() {
 
                                 <div className="pt-4 border-t flex justify-between items-center">
                                   <span className="text-lg font-semibold"><T textKey="Total" /></span>
-                                  <span className="text-2xl font-bold text-primary">Rs. {selectedSale.total_amount.toFixed(2)}</span>
+                                  <span className="text-2xl font-bold text-primary">Rs. {(selectedSale.total_amount || 0).toFixed(2)}</span>
                                 </div>
                               </div>
                             ) : (
